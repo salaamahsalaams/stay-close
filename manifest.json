@@ -1,0 +1,18 @@
+{
+  "name": "Stay Close",
+  "short_name": "StayClose",
+  "description": "Stay connected with family and friends",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F9F7",
+  "theme_color": "#5B8A72",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

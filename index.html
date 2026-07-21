@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#5B8A72">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Stay Close</title>
+</head>
+<body>
+
+  <!-- ═══ SETUP SCREEN ═══ -->
+  <div id="setupScreen" class="screen">
+    <div class="setup-wrap">
+      <div class="setup-icon">
+        <img src="icon.svg" alt="Stay Close" class="setup-logo">
+      </div>
+      <h1 class="setup-title">Stay Close</h1>
+      <p class="setup-sub">Stay connected with the people who matter</p>
+      <div class="setup-form">
+        <label class="setup-label" for="setupName">What's your name?</label>
+        <input id="setupName" type="text" class="setup-input" placeholder="Your name" autocomplete="given-name">
+        <button id="setupBtn" class="btn-primary setup-btn">Get Started</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APP SCREEN ═══ -->
+  <div id="appScreen" class="screen" hidden>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="hdr-left">
+        <h1 class="hdr-title">Stay Close</h1>
+      </div>
+      <div class="hdr-right">
+        <button id="settingsBtn" class="hdr-btn" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Status Banner -->
+    <div id="statusBanner" class="status-banner" hidden>
+      <span id="statusText"></span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="family">Family</button>
+      <button class="tab" data-filter="friends">Friends</button>
+      <button class="tab" data-filter="due">Due</button>
+    </div>
+
+    <!-- Contact List -->
+    <main id="listWrap">
+      <div id="contactList" class="contact-list"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <div class="empty-icon">💝</div>
+        <p class="empty-text">No contacts yet</p>
+        <p class="empty-sub">Tap + to add someone you want to stay close to</p>
+      </div>
+    </main>
+
+    <!-- Add Button -->
+    <button id="addBtn" class="fab" aria-label="Add contact">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- ═══ ADD CONTACT MODAL ═══ -->
+  <div id="addModal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-x" data-close="addModal">&times;</button>
+      <h2 class="modal-title">Add Contact</h2>
+
+      <!-- Step 1: Name & Relationship -->
+      <div id="addStep1" class="add-step">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input id="addName" type="text" class="form-input" placeholder="Their name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Relationship</label>
+          <div id="relPicker" class="pill-grid">
+            <button class="pill" data-rel="parent">👨‍👩 Parent</button>
+            <button class="pill" data-rel="sibling">👫 Sibling</button>
+            <button class="pill" data-rel="grandparent">👴 Grandparent</button>
+            <button class="pill" data-rel="uncle_aunt">👤 Uncle/Aunt</button>
+            <button class="pill" data-rel="cousin">🤝 Cousin</button>
+            <button class="pill" data-rel="in_law">💒 In-law</button>
+            <button class="pill" data-rel="friend_close">💛 Close Friend</button>
+            <button class="pill" data-rel="friend_casual">🙂 Casual Friend</button>
+          </div>
+        </div>
+        <button class="btn-primary step-next" data-next="2">Next</button>
+      </div>
+
+      <!-- Step 2: Language & Formality -->
+      <div id="addStep2" class="add-step" hidden>
+        <div class="form-group">
+          <label class="form-label">Preferred language for messages</label>
+          <div class="toggle-row">
+            <button class="toggle-btn active" data-lang="en">English</button>
+            <button class="toggle-btn" data-lang="fr">Français</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">How formal should messages be?</label>
+          <div class="pill-grid">
+            <button class="pill formality-pill" data-form="formal">🎩 Formal</button>
+            <button class="pill formality-pill" data-form="semi_formal">😊 Semi-formal</button>
+            <button class="pill formality-pill" data-form="casual">✌️ Casual</button>
+          </div>
+        </div>
+        <div class="step-nav">
+          <button class="btn-secondary step-back" data-back="1">Back</button>
+          <button class="btn-primary step-next" data-next="3">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Profiling -->
+      <div id="addStep3" class="add-step" hidden>
+        <div class="form-group">
+          <label class="form-label">How close are you?</label>
+          <div class="pill-grid">
+            <button class="pill closeness-pill" data-close="very_close">💕 Very close</button>
+            <button class="pill closeness-pill" data-close="close">💙 Close</button>
+            <button class="pill closeness-pill" data-close="moderate">👋 Moderate</button>
+            <button class="pill closeness-pill" data-close="distant">🌍 Distant</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Topics you usually discuss</label>
+          <div class="pill-grid">
+            <button class="pill topic-pill" data-topic="health">🏥 Health</button>
+            <button class="pill topic-pill" data-topic="work">💼 Work</button>
+            <button class="pill topic-pill" data-topic="family">👨‍👩‍👧 Family</button>
+            <button class="pill topic-pill" data-topic="faith">🙏 Faith</button>
+            <button class="pill topic-pill" data-topic="kids">👶 Kids</button>
+            <button class="pill topic-pill" data-topic="studies">📚 Studies</button>
+            <button class="pill topic-pill" data-topic="cooking">🍳 Cooking</button>
+            <button class="pill topic-pill" data-topic="travel">✈️ Travel</button>
+            <button class="pill topic-pill" data-topic="sports">⚽ Sports</button>
+            <button class="pill topic-pill" data-topic="news">📰 News</button>
+          </div>
+        </div>
+        <div class="step-nav">
+          <button class="btn-secondary step-back" data-back="2">Back</button>
+          <button class="btn-primary step-next" data-next="4">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Cultural & Personal Notes -->
+      <div id="addStep4" class="add-step" hidden>
+        <div class="form-group">
+          <label class="form-label">Cultural notes</label>
+          <textarea id="addCultural" class="form-textarea" placeholder="e.g., Always ask about their health first, use respectful titles..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shared memories or inside jokes</label>
+          <textarea id="addMemories" class="form-textarea" placeholder="Anything personal to reference in messages..." rows="3"></textarea>
+        </div>
+        <div class="step-nav">
+          <button class="btn-secondary step-back" data-back="3">Back</button>
+          <button class="btn-primary step-next" data-next="5">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Reminder & Special Dates -->
+      <div id="addStep5" class="add-step" hidden>
+        <div class="form-group">
+          <label class="form-label">How often should I remind you?</label>
+          <div class="pill-grid">
+            <button class="pill freq-pill" data-freq="daily">Every day</button>
+            <button class="pill freq-pill" data-freq="every_3_days">Every 3 days</button>
+            <button class="pill freq-pill" data-freq="weekly">Weekly</button>
+            <button class="pill freq-pill" data-freq="biweekly">Every 2 weeks</button>
+            <button class="pill freq-pill" data-freq="monthly">Monthly</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Birthday (optional)</label>
+          <input id="addBirthday" type="date" class="form-input">
+        </div>
+        <div class="step-nav">
+          <button class="btn-secondary step-back" data-back="4">Back</button>
+          <button id="saveContactBtn" class="btn-primary">Save Contact</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CONTACT DETAIL MODAL ═══ -->
+  <div id="detailModal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-x" data-close="detailModal">&times;</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <!-- ═══ MESSAGE GENERATOR MODAL ═══ -->
+  <div id="msgModal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-x" data-close="msgModal">&times;</button>
+      <h2 class="modal-title" id="msgTitle">Generate Message</h2>
+
+      <!-- Occasion Picker -->
+      <div id="occasionPicker">
+        <label class="form-label">What's the occasion?</label>
+        <div class="pill-grid">
+          <button class="pill occasion-pill" data-occ="checking_in">👋 Just checking in</button>
+          <button class="pill occasion-pill" data-occ="birthday">🎂 Birthday</button>
+          <button class="pill occasion-pill" data-occ="holiday">🎉 Holiday</button>
+          <button class="pill occasion-pill" data-occ="congratulations">🎊 Congratulations</button>
+          <button class="pill occasion-pill" data-occ="condolences">🕊️ Condolences</button>
+          <button class="pill occasion-pill" data-occ="thank_you">🙏 Thank you</button>
+          <button class="pill occasion-pill" data-occ="encouragement">💪 Encouragement</button>
+          <button class="pill occasion-pill" data-occ="apology">🤗 Apology</button>
+        </div>
+      </div>
+
+      <!-- Generated Message -->
+      <div id="msgResult" hidden>
+        <div id="msgBubble" class="msg-bubble"></div>
+        <div id="msgPointerWrap" class="form-group" hidden>
+          <label class="form-label">Pointers for regeneration</label>
+          <textarea id="msgPointers" class="form-textarea" placeholder="e.g., mention their new job, ask about the kids..." rows="2"></textarea>
+        </div>
+        <div class="msg-actions">
+          <button id="msgRegen" class="btn-icon" title="Regenerate">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button id="msgPointerBtn" class="btn-icon" title="Add pointers">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button id="msgCopy" class="btn-icon" title="Copy to clipboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button id="msgSend" class="btn-primary btn-sm">Mark as Sent</button>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="msgLoading" class="msg-loading" hidden>
+        <div class="spinner"></div>
+        <p>Generating your message...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-x" data-close="settingsModal">&times;</button>
+      <h2 class="modal-title">Settings</h2>
+
+      <div class="form-group">
+        <label class="form-label">Your name</label>
+        <input id="setName" type="text" class="form-input">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Default language</label>
+        <div class="toggle-row">
+          <button class="toggle-btn set-lang" data-lang="en">English</button>
+          <button class="toggle-btn set-lang" data-lang="fr">Français</button>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-group">
+        <label class="form-label">Gemini API Key <span class="label-hint">(free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>)</span></label>
+        <input id="setGeminiKey" type="password" class="form-input" placeholder="AIza...">
+      </div>
+
+      <hr class="divider">
+
+      <details class="settings-section">
+        <summary class="form-label clickable">Email Reminders (EmailJS)</summary>
+        <p class="label-hint" style="margin-bottom:12px">Free at <a href="https://www.emailjs.com" target="_blank" rel="noopener">emailjs.com</a> — 200 emails/month</p>
+        <div class="form-group">
+          <label class="form-label-sm">Your email</label>
+          <input id="setEmail" type="email" class="form-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label-sm">Service ID</label>
+          <input id="setEjsService" type="text" class="form-input" placeholder="service_xxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label-sm">Template ID</label>
+          <input id="setEjsTemplate" type="text" class="form-input" placeholder="template_xxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label-sm">Public Key</label>
+          <input id="setEjsKey" type="text" class="form-input" placeholder="xxxxxxxxxxxxx">
+        </div>
+        <button id="testEmailBtn" class="btn-secondary btn-sm">Send Test Email</button>
+      </details>
+
+      <div class="modal-acts">
+        <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EDIT CONTACT MODAL ═══ -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-x" data-close="editModal">&times;</button>
+      <h2 class="modal-title">Edit Contact</h2>
+      <div id="editContent"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="messages.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
