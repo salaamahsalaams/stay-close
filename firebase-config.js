@@ -12,11 +12,11 @@
  */
 
 window.FIREBASE_CONFIG = {
-  apiKey:            "",
-  authDomain:        "",
-  databaseURL:       "",
-  projectId:         "",
-  storageBucket:     "",
-  messagingSenderId: "",
-  appId:             ""
+  apiKey:            "AIzaSyCTpWRcP4kVKsZ_F5khB1AF1n_4ZGimK7o",
+  authDomain:        "stay-close-sc2026.firebaseapp.com",
+  databaseURL:       "https://stay-close-sc2026-default-rtdb.us-central1.firebasedatabase.app",
+  projectId:         "stay-close-sc2026",
+  storageBucket:     "stay-close-sc2026.firebasestorage.app",
+  messagingSenderId: "637296038610",
+  appId:             "1:637296038610:web:5b444bd65f61d1dad7930b"
 };
