@@ -621,9 +621,9 @@ function openSettings() {
   $('setName').value = state.userName || '';
   $('setGeminiKey').value = localStorage.getItem('gemini_api_key') || '';
   $('setEmail').value = localStorage.getItem('user_email') || '';
-  $('setEjsService').value = localStorage.getItem('ejs_service') || '';
-  $('setEjsTemplate').value = localStorage.getItem('ejs_template') || '';
-  $('setEjsKey').value = localStorage.getItem('ejs_key') || '';
+  $('setEjsService').value = localStorage.getItem('ejs_service') || 'service_n7vi3cp';
+  $('setEjsTemplate').value = localStorage.getItem('ejs_template') || 'template_g12p1g4';
+  $('setEjsKey').value = localStorage.getItem('ejs_key') || 'SKTDXa5RC6ClKNCNA';
 
   $('settingsModal').querySelectorAll('.set-lang').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === state.defaultLanguage);
