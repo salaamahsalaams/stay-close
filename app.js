@@ -890,7 +890,7 @@ async function testGrokKey() {
         'Authorization': 'Bearer ' + key
       },
       body: JSON.stringify({
-        model: 'grok-3-mini-fast',
+        model: 'grok-4.3',
         messages: [{ role: 'user', content: 'Say "Connected!" in one word.' }],
         max_tokens: 10
       })

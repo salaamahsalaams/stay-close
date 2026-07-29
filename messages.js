@@ -374,7 +374,7 @@ async function generateWithGrok(apiKey, prompt) {
       'Authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify({
-      model: 'grok-3-mini-fast',
+      model: 'grok-4.3',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.9,
       max_tokens: 300
