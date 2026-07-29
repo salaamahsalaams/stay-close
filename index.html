@@ -157,15 +157,11 @@
         </div>
       </div>
 
-      <!-- Step 4: Cultural & Personal Notes -->
+      <!-- Step 4: Notes -->
       <div id="addStep4" class="add-step" hidden>
         <div class="form-group">
-          <label class="form-label">Cultural notes</label>
-          <textarea id="addCultural" class="form-textarea" placeholder="e.g., Always ask about their health first, use respectful titles..." rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Shared memories or inside jokes</label>
-          <textarea id="addMemories" class="form-textarea" placeholder="Anything personal to reference in messages..." rows="3"></textarea>
+          <label class="form-label">Notes</label>
+          <textarea id="addNotes" class="form-textarea" placeholder="Anything about this person — context, relationship details, things to mention or avoid, shared memories..." rows="4"></textarea>
         </div>
         <div class="step-nav">
           <button class="btn-secondary step-back" data-back="3">Back</button>
@@ -183,7 +179,12 @@
             <button class="pill freq-pill" data-freq="weekly">Weekly</button>
             <button class="pill freq-pill" data-freq="biweekly">Every 2 weeks</button>
             <button class="pill freq-pill" data-freq="monthly">Monthly</button>
+            <button class="pill freq-pill" data-freq="quarterly">Every 3 months</button>
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start reminders from</label>
+          <input id="addStartDate" type="date" class="form-input">
         </div>
         <div class="form-group">
           <label class="form-label">Birthday (optional)</label>
@@ -279,6 +280,7 @@
       <div class="form-group">
         <label class="form-label">Gemini API Key <span class="label-hint">(free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>)</span></label>
         <input id="setGeminiKey" type="password" class="form-input" placeholder="AIza...">
+        <button id="testGeminiBtn" class="btn-secondary btn-sm" style="margin-top:8px">Test API Key</button>
       </div>
 
       <hr class="divider">

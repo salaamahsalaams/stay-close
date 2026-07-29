@@ -4,11 +4,12 @@ const FREQ_MS = {
   every_3_days: 259200000,
   weekly: 604800000,
   biweekly: 1209600000,
-  monthly: 2592000000
+  monthly: 2592000000,
+  quarterly: 7776000000
 };
 const FREQ_LABELS = {
   daily: 'Daily', every_3_days: 'Every 3 days', weekly: 'Weekly',
-  biweekly: 'Biweekly', monthly: 'Monthly'
+  biweekly: 'Biweekly', monthly: 'Monthly', quarterly: 'Every 3 months'
 };
 const FAMILY_RELS = new Set(['parent', 'sibling', 'grandparent', 'uncle_aunt', 'cousin', 'in_law']);
 
@@ -314,6 +315,7 @@ function renderContacts() {
         </div>
       </div>
       <div class="card-actions">
+        <button class="card-btn card-btn-edit" title="Edit" data-action="edit">✏️</button>
         <button class="card-btn card-btn-msg" title="Generate message" data-action="msg">💬</button>
         <button class="card-btn card-btn-check" title="Mark as contacted" data-action="check">✓</button>
       </div>
@@ -355,17 +357,11 @@ function showDetail(id) {
     </div>`;
   }
 
-  if (contact.profile?.culturalNotes) {
+  const notes = contact.profile?.notes || contact.profile?.culturalNotes || '';
+  if (notes) {
     html += `<div class="detail-sec">
-      <div class="detail-sec-title">Cultural Notes</div>
-      <div class="detail-note">${esc(contact.profile.culturalNotes)}</div>
-    </div>`;
-  }
-
-  if (contact.profile?.sharedMemories) {
-    html += `<div class="detail-sec">
-      <div class="detail-sec-title">Shared Memories</div>
-      <div class="detail-note">${esc(contact.profile.sharedMemories)}</div>
+      <div class="detail-sec-title">Notes</div>
+      <div class="detail-note">${esc(notes)}</div>
     </div>`;
   }
 
@@ -433,12 +429,8 @@ function openEditModal(id) {
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Cultural Notes</label>
-      <textarea id="editCultural" class="form-textarea" rows="3">${esc(contact.profile?.culturalNotes || '')}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Shared Memories</label>
-      <textarea id="editMemories" class="form-textarea" rows="3">${esc(contact.profile?.sharedMemories || '')}</textarea>
+      <label class="form-label">Notes</label>
+      <textarea id="editNotes" class="form-textarea" rows="4">${esc(contact.profile?.culturalNotes || contact.profile?.notes || '')}</textarea>
     </div>
     <div class="modal-acts">
       <button class="btn-primary" onclick="saveEdit('${contact.id}')">Save Changes</button>
@@ -475,8 +467,8 @@ function saveEdit(id) {
     contact.nextReminder = calcNextReminder(contact);
   }
   if (!contact.profile) contact.profile = {};
-  contact.profile.culturalNotes = $('editCultural').value.trim();
-  contact.profile.sharedMemories = $('editMemories').value.trim();
+  contact.profile.notes = $('editNotes').value.trim();
+  contact.profile.culturalNotes = contact.profile.notes;
 
   save();
   render();
@@ -556,12 +548,12 @@ function resetAddForm() {
   addFormState = {
     name: '', relationship: '', language: state.defaultLanguage || 'en',
     formality: 'semi_formal', closeness: 'close', topics: [],
-    culturalNotes: '', sharedMemories: '', reminderFrequency: 'weekly',
-    birthday: ''
+    notes: '', reminderFrequency: 'weekly',
+    startDate: '', birthday: ''
   };
   $('addName').value = '';
-  $('addCultural').value = '';
-  $('addMemories').value = '';
+  $('addNotes').value = '';
+  $('addStartDate').value = new Date().toISOString().split('T')[0];
   $('addBirthday').value = '';
   showAddStep(1);
 
@@ -581,12 +573,15 @@ function showAddStep(n) {
 
 function saveContact() {
   addFormState.name = $('addName').value.trim();
-  addFormState.culturalNotes = $('addCultural').value.trim();
-  addFormState.sharedMemories = $('addMemories').value.trim();
+  addFormState.notes = $('addNotes').value.trim();
+  addFormState.startDate = $('addStartDate').value;
   addFormState.birthday = $('addBirthday').value;
 
   if (!addFormState.name) { showToast('Please enter a name'); return; }
   if (!addFormState.relationship) { showToast('Please select a relationship'); return; }
+
+  const startTs = addFormState.startDate ? new Date(addFormState.startDate).getTime() : Date.now();
+  const freq = FREQ_MS[addFormState.reminderFrequency] || FREQ_MS.weekly;
 
   const contact = {
     id: uid(),
@@ -595,13 +590,14 @@ function saveContact() {
     language: addFormState.language,
     reminderFrequency: addFormState.reminderFrequency,
     lastContacted: null,
-    nextReminder: Date.now(),
+    nextReminder: startTs + freq,
+    reminderStartDate: startTs,
     profile: {
       closeness: addFormState.closeness,
       formality: addFormState.formality,
       topics: addFormState.topics,
-      culturalNotes: addFormState.culturalNotes,
-      sharedMemories: addFormState.sharedMemories,
+      notes: addFormState.notes,
+      culturalNotes: addFormState.notes,
       specialDates: addFormState.birthday ? [{ date: addFormState.birthday, occasion: 'Birthday' }] : []
     },
     messageHistory: []
@@ -696,6 +692,27 @@ async function sendTestEmail() {
   }
 }
 
+async function testGeminiKey() {
+  const key = $('setGeminiKey').value.trim();
+  if (!key) { showToast('Please enter an API key first'); return; }
+  showToast('Testing...');
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Say "Connected!" in one word.' }] }],
+        generationConfig: { maxOutputTokens: 10 }
+      })
+    });
+    if (res.ok) showToast('Gemini API key works!');
+    else showToast('API key invalid — check and try again');
+  } catch {
+    showToast('Connection failed — check your internet');
+  }
+}
+
 // ── Toast ──
 
 function showToast(msg) {
@@ -740,6 +757,8 @@ function bindEvents() {
       const id = card.dataset.id;
       if (action.dataset.action === 'msg') {
         openMsgModal(id);
+      } else if (action.dataset.action === 'edit') {
+        openEditModal(id);
       } else if (action.dataset.action === 'check') {
         markContacted(id);
       }
@@ -836,6 +855,7 @@ function bindEvents() {
   $('settingsBtn').addEventListener('click', openSettings);
   $('saveSettingsBtn').addEventListener('click', saveSettings);
   $('testEmailBtn').addEventListener('click', sendTestEmail);
+  $('testGeminiBtn').addEventListener('click', testGeminiKey);
 
   $('settingsModal').addEventListener('click', e => {
     const langBtn = e.target.closest('.set-lang');

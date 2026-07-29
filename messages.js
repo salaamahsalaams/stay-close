@@ -327,11 +327,9 @@ function buildGeminiPrompt(contact, occasion, pointers) {
   if (contact.profile?.topics?.length) {
     prompt += `- Topics we usually discuss: ${contact.profile.topics.join(', ')}\n`;
   }
-  if (contact.profile?.culturalNotes) {
-    prompt += `- Cultural context: ${contact.profile.culturalNotes}\n`;
-  }
-  if (contact.profile?.sharedMemories) {
-    prompt += `- Shared memories: ${contact.profile.sharedMemories}\n`;
+  const notes = contact.profile?.notes || contact.profile?.culturalNotes || '';
+  if (notes) {
+    prompt += `- Context & notes about this person: ${notes}\n`;
   }
   prompt += `\nOccasion: ${occLabel}\n`;
   if (pointers) {
