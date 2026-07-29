@@ -552,6 +552,12 @@ body{
 }
 
 /* ── Message Bubble ── */
+.msg-source{
+  font-size:11px;font-weight:600;
+  color:var(--txt-lt);
+  text-align:right;
+  margin-top:8px;
+}
 .msg-bubble{
   background:var(--primary-lt);
   border-radius:var(--r) var(--r) var(--r) 4px;

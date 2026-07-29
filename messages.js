@@ -413,8 +413,11 @@ async function generateMessage(contact, occasion, pointers) {
 
   for (const [key, fn, name] of [primary, fallback]) {
     if (!key) continue;
-    try { return await fn(key, prompt); }
+    try {
+      const text = await fn(key, prompt);
+      return { text, source: name };
+    }
     catch (e) { console.warn(`${name} failed, trying next:`, e); }
   }
-  return getTemplateMessage(contact, occasion);
+  return { text: getTemplateMessage(contact, occasion), source: 'Template' };
 }
