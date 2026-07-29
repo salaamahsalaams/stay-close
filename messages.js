@@ -403,6 +403,7 @@ async function generateMessage(contact, occasion, pointers) {
   const prompt = buildGeminiPrompt(contact, occasion, pointers);
   const geminiKey = localStorage.getItem('gemini_api_key');
   const grokKey = localStorage.getItem('grok_api_key');
+  const errors = [];
 
   const primary = provider === 'grok'
     ? [grokKey, generateWithGrok, 'Grok']
@@ -412,12 +413,12 @@ async function generateMessage(contact, occasion, pointers) {
     : [grokKey, generateWithGrok, 'Grok'];
 
   for (const [key, fn, name] of [primary, fallback]) {
-    if (!key) continue;
+    if (!key) { errors.push(`${name}: no API key`); continue; }
     try {
       const text = await fn(key, prompt);
       return { text, source: name };
     }
-    catch (e) { console.warn(`${name} failed, trying next:`, e); }
+    catch (e) { errors.push(`${name}: ${e.message}`); }
   }
-  return { text: getTemplateMessage(contact, occasion), source: 'Template' };
+  return { text: getTemplateMessage(contact, occasion), source: 'Template', errors };
 }
