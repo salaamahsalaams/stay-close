@@ -1,5 +1,5 @@
 name: Daily Stay Close Reminder
-on:
+"on":
   schedule:
     - cron: '3 13 * * *'
   workflow_dispatch: {}
