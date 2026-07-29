@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stayclose-v14';
+const CACHE_NAME = 'stayclose-v15';
 const ASSETS = [
   './', './index.html', './style.css', './app.js', './messages.js',
   './firebase-config.js', './manifest.json', './icon.svg'

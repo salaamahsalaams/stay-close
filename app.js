@@ -780,6 +780,10 @@ function openSettings() {
     b.classList.toggle('active', b.dataset.lang === state.defaultLanguage);
   });
 
+  const gk = localStorage.getItem('grok_api_key');
+  const gmk = localStorage.getItem('gemini_api_key');
+  $('debugInfo').textContent = `Cache: v14 | Provider: ${provider} | Grok key: ${gk ? 'saved (' + gk.substring(0, 6) + '...)' : 'none'} | Gemini key: ${gmk ? 'saved (' + gmk.substring(0, 6) + '...)' : 'none'}`;
+
   $('settingsModal').classList.add('open');
 }
 
