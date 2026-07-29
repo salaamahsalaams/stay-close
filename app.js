@@ -429,8 +429,15 @@ function openEditModal(id) {
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">Start reminders from</label>
+      <input id="editStartDate" type="date" class="form-input" value="${contact.reminderStartDate ? new Date(contact.reminderStartDate).toISOString().split('T')[0] : ''}">
+    </div>
+    <div class="form-group">
       <label class="form-label">Notes</label>
-      <textarea id="editNotes" class="form-textarea" rows="4">${esc(contact.profile?.culturalNotes || contact.profile?.notes || '')}</textarea>
+      <textarea id="editNotes" class="form-textarea" rows="4">${esc(contact.profile?.notes || contact.profile?.culturalNotes || '')}</textarea>
+    </div>
+    <div class="detail-actions" style="margin-top:12px;margin-bottom:8px">
+      <button class="btn-danger" onclick="confirmDelete('${contact.id}')">Delete Contact</button>
     </div>
     <div class="modal-acts">
       <button class="btn-primary" onclick="saveEdit('${contact.id}')">Save Changes</button>
@@ -462,10 +469,16 @@ function saveEdit(id) {
   const langBtn = $('editContent').querySelector('.edit-lang.active');
   if (langBtn) contact.language = langBtn.dataset.lang;
   const freqBtn = $('editContent').querySelector('.edit-freq.active');
+  const startDateVal = $('editStartDate').value;
+  if (startDateVal) {
+    contact.reminderStartDate = new Date(startDateVal).getTime();
+  }
   if (freqBtn) {
     contact.reminderFrequency = freqBtn.dataset.freq;
-    contact.nextReminder = calcNextReminder(contact);
   }
+  const base = contact.reminderStartDate || contact.lastContacted || Date.now();
+  const freq = FREQ_MS[contact.reminderFrequency] || FREQ_MS.weekly;
+  contact.nextReminder = base + freq;
   if (!contact.profile) contact.profile = {};
   contact.profile.notes = $('editNotes').value.trim();
   contact.profile.culturalNotes = contact.profile.notes;
