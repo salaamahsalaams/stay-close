@@ -401,19 +401,20 @@ function getTemplateMessage(contact, occasion) {
 async function generateMessage(contact, occasion, pointers) {
   const provider = localStorage.getItem('ai_provider') || 'gemini';
   const prompt = buildGeminiPrompt(contact, occasion, pointers);
+  const geminiKey = localStorage.getItem('gemini_api_key');
+  const grokKey = localStorage.getItem('grok_api_key');
 
-  if (provider === 'grok') {
-    const key = localStorage.getItem('grok_api_key');
-    if (key) {
-      try { return await generateWithGrok(key, prompt); }
-      catch (e) { console.warn('Grok failed, falling back to templates:', e); }
-    }
-  } else {
-    const key = localStorage.getItem('gemini_api_key');
-    if (key) {
-      try { return await generateWithGemini(key, prompt); }
-      catch (e) { console.warn('Gemini failed, falling back to templates:', e); }
-    }
+  const primary = provider === 'grok'
+    ? [grokKey, generateWithGrok, 'Grok']
+    : [geminiKey, generateWithGemini, 'Gemini'];
+  const fallback = provider === 'grok'
+    ? [geminiKey, generateWithGemini, 'Gemini']
+    : [grokKey, generateWithGrok, 'Grok'];
+
+  for (const [key, fn, name] of [primary, fallback]) {
+    if (!key) continue;
+    try { return await fn(key, prompt); }
+    catch (e) { console.warn(`${name} failed, trying next:`, e); }
   }
   return getTemplateMessage(contact, occasion);
 }
