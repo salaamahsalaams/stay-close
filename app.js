@@ -757,10 +757,18 @@ function saveContact() {
 function openSettings() {
   $('setName').value = state.userName || '';
   $('setGeminiKey').value = localStorage.getItem('gemini_api_key') || '';
+  $('setGrokKey').value = localStorage.getItem('grok_api_key') || '';
   $('setEmail').value = localStorage.getItem('user_email') || '';
   $('setEjsService').value = localStorage.getItem('ejs_service') || 'service_n7vi3cp';
   $('setEjsTemplate').value = localStorage.getItem('ejs_template') || 'template_g12p1g4';
   $('setEjsKey').value = localStorage.getItem('ejs_key') || 'SKTDXa5RC6ClKNCNA';
+
+  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  $('settingsModal').querySelectorAll('.ai-provider').forEach(b => {
+    b.classList.toggle('active', b.dataset.provider === provider);
+  });
+  $('geminiSettings').hidden = provider !== 'gemini';
+  $('grokSettings').hidden = provider !== 'grok';
 
   $('settingsModal').querySelectorAll('.set-lang').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === state.defaultLanguage);
@@ -774,9 +782,16 @@ function saveSettings() {
   const langBtn = $('settingsModal').querySelector('.set-lang.active');
   if (langBtn) state.defaultLanguage = langBtn.dataset.lang;
 
+  const providerBtn = $('settingsModal').querySelector('.ai-provider.active');
+  if (providerBtn) localStorage.setItem('ai_provider', providerBtn.dataset.provider);
+
   const geminiKey = $('setGeminiKey').value.trim();
   if (geminiKey) localStorage.setItem('gemini_api_key', geminiKey);
   else localStorage.removeItem('gemini_api_key');
+
+  const grokKey = $('setGrokKey').value.trim();
+  if (grokKey) localStorage.setItem('grok_api_key', grokKey);
+  else localStorage.removeItem('grok_api_key');
 
   const email = $('setEmail').value.trim();
   if (email) localStorage.setItem('user_email', email);
@@ -851,6 +866,34 @@ async function testGeminiKey() {
       })
     });
     if (res.ok) showToast('Gemini API key works!');
+    else {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.error?.message || `Error ${res.status}`;
+      showToast('API key failed: ' + msg);
+    }
+  } catch {
+    showToast('Connection failed — check your internet');
+  }
+}
+
+async function testGrokKey() {
+  const key = $('setGrokKey').value.trim();
+  if (!key) { showToast('Please enter an API key first'); return; }
+  showToast('Testing...');
+  try {
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model: 'grok-3-mini-fast',
+        messages: [{ role: 'user', content: 'Say "Connected!" in one word.' }],
+        max_tokens: 10
+      })
+    });
+    if (res.ok) showToast('Grok API key works!');
     else {
       const err = await res.json().catch(() => ({}));
       const msg = err?.error?.message || `Error ${res.status}`;
@@ -1018,12 +1061,20 @@ function bindEvents() {
   $('saveSettingsBtn').addEventListener('click', saveSettings);
   $('testEmailBtn').addEventListener('click', sendTestEmail);
   $('testGeminiBtn').addEventListener('click', testGeminiKey);
+  $('testGrokBtn').addEventListener('click', testGrokKey);
 
   $('settingsModal').addEventListener('click', e => {
     const langBtn = e.target.closest('.set-lang');
     if (langBtn) {
       $('settingsModal').querySelectorAll('.set-lang').forEach(b => b.classList.remove('active'));
       langBtn.classList.add('active');
+    }
+    const provBtn = e.target.closest('.ai-provider');
+    if (provBtn) {
+      $('settingsModal').querySelectorAll('.ai-provider').forEach(b => b.classList.remove('active'));
+      provBtn.classList.add('active');
+      $('geminiSettings').hidden = provBtn.dataset.provider !== 'gemini';
+      $('grokSettings').hidden = provBtn.dataset.provider !== 'grok';
     }
   });
 

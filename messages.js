@@ -366,6 +366,28 @@ async function generateWithGemini(apiKey, prompt) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 }
 
+async function generateWithGrok(apiKey, prompt) {
+  const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiKey
+    },
+    body: JSON.stringify({
+      model: 'grok-3-mini-fast',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.9,
+      max_tokens: 300
+    })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Grok API error: ${res.status} — ${err}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || '';
+}
+
 function getTemplateMessage(contact, occasion) {
   const lang = contact.language || 'en';
   const formality = contact.profile?.formality || 'semi_formal';
@@ -377,14 +399,20 @@ function getTemplateMessage(contact, occasion) {
 }
 
 async function generateMessage(contact, occasion, pointers) {
-  const apiKey = localStorage.getItem('gemini_api_key');
-  if (apiKey) {
-    try {
-      const prompt = buildGeminiPrompt(contact, occasion, pointers);
-      return await generateWithGemini(apiKey, prompt);
-    } catch (e) {
-      console.warn('Gemini failed, falling back to templates:', e);
-      return getTemplateMessage(contact, occasion);
+  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  const prompt = buildGeminiPrompt(contact, occasion, pointers);
+
+  if (provider === 'grok') {
+    const key = localStorage.getItem('grok_api_key');
+    if (key) {
+      try { return await generateWithGrok(key, prompt); }
+      catch (e) { console.warn('Grok failed, falling back to templates:', e); }
+    }
+  } else {
+    const key = localStorage.getItem('gemini_api_key');
+    if (key) {
+      try { return await generateWithGemini(key, prompt); }
+      catch (e) { console.warn('Gemini failed, falling back to templates:', e); }
     }
   }
   return getTemplateMessage(contact, occasion);

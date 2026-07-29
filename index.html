@@ -287,9 +287,24 @@
       <hr class="divider">
 
       <div class="form-group">
+        <label class="form-label">AI Provider</label>
+        <div class="toggle-row">
+          <button class="toggle-btn ai-provider active" data-provider="gemini">Gemini</button>
+          <button class="toggle-btn ai-provider" data-provider="grok">Grok</button>
+        </div>
+      </div>
+
+      <div id="geminiSettings" class="form-group">
         <label class="form-label">Gemini API Key <span class="label-hint">(free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>)</span></label>
-        <input id="setGeminiKey" type="password" class="form-input" placeholder="AIza...">
+        <input id="setGeminiKey" type="password" class="form-input" placeholder="Your Gemini key">
         <button id="testGeminiBtn" class="btn-secondary btn-sm" style="margin-top:8px">Test API Key</button>
+      </div>
+
+      <div id="grokSettings" class="form-group" hidden>
+        <label class="form-label">Grok API Key <span class="label-hint">($25 free at <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a>)</span></label>
+        <input id="setGrokKey" type="password" class="form-input" placeholder="Your Grok key">
+        <p class="label-hint" style="margin-top:4px">Enable Data Sharing in console for $150/mo extra free credits</p>
+        <button id="testGrokBtn" class="btn-secondary btn-sm" style="margin-top:8px">Test API Key</button>
       </div>
 
       <hr class="divider">
