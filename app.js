@@ -710,17 +710,24 @@ async function testGeminiKey() {
   if (!key) { showToast('Please enter an API key first'); return; }
   showToast('Testing...');
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: 'Say "Connected!" in one word.' }] }],
         generationConfig: { maxOutputTokens: 10 }
       })
     });
     if (res.ok) showToast('Gemini API key works!');
-    else showToast('API key invalid — check and try again');
+    else {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.error?.message || `Error ${res.status}`;
+      showToast('API key failed: ' + msg);
+    }
   } catch {
     showToast('Connection failed — check your internet');
   }
