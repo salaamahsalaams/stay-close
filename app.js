@@ -378,6 +378,7 @@ function showDetail(id) {
       <span class="card-status ${status}" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>
       ${formatDueIn(contact.nextReminder)}<br>
       Last contacted: ${formatTimeAgo(contact.lastContacted)}
+      ${contact.reminderStartDate ? '<br>Start date: ' + new Date(contact.reminderStartDate).toLocaleDateString() : ''}
     </div>
   </div>`;
 
@@ -476,9 +477,12 @@ function saveEdit(id) {
   if (freqBtn) {
     contact.reminderFrequency = freqBtn.dataset.freq;
   }
-  const base = contact.reminderStartDate || contact.lastContacted || Date.now();
   const freq = FREQ_MS[contact.reminderFrequency] || FREQ_MS.weekly;
-  contact.nextReminder = base + freq;
+  if (contact.lastContacted) {
+    contact.nextReminder = contact.lastContacted + freq;
+  } else {
+    contact.nextReminder = contact.reminderStartDate || Date.now();
+  }
   if (!contact.profile) contact.profile = {};
   contact.profile.notes = $('editNotes').value.trim();
   contact.profile.culturalNotes = contact.profile.notes;
@@ -603,7 +607,7 @@ function saveContact() {
     language: addFormState.language,
     reminderFrequency: addFormState.reminderFrequency,
     lastContacted: null,
-    nextReminder: startTs + freq,
+    nextReminder: startTs,
     reminderStartDate: startTs,
     profile: {
       closeness: addFormState.closeness,
