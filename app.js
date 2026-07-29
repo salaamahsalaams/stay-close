@@ -17,6 +17,7 @@ let state = null;
 let db = null;
 let currentFilter = 'all';
 let weekOffset = 0;
+let searchQuery = '';
 let addFormState = {};
 let activeContactId = null;
 let activeOccasion = null;
@@ -259,6 +260,13 @@ function renderStatusBanner() {
 
 function filterContacts() {
   let list = [...state.contacts];
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(c => {
+      const rel = RELATIONSHIP_LABELS[c.relationship] || c.relationship || '';
+      return c.name.toLowerCase().includes(q) || rel.toLowerCase().includes(q);
+    });
+  }
   if (currentFilter === 'family') {
     list = list.filter(c => FAMILY_RELS.has(c.relationship));
   } else if (currentFilter === 'friends') {
@@ -876,6 +884,19 @@ function bindEvents() {
   });
   $('setupName').addEventListener('keydown', e => {
     if (e.key === 'Enter') $('setupBtn').click();
+  });
+
+  // Search
+  $('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    $('searchClear').hidden = !searchQuery;
+    renderContacts();
+  });
+  $('searchClear').addEventListener('click', () => {
+    $('searchInput').value = '';
+    searchQuery = '';
+    $('searchClear').hidden = true;
+    renderContacts();
   });
 
   // Tabs
