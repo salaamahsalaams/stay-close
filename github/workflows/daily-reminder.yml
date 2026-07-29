@@ -1,0 +1,54 @@
+name: Daily Stay Close Reminder
+  on:
+    schedule:
+      - cron: '3 13 * * *'
+    workflow_dispatch: {}
+  jobs:
+    send-reminder:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Check contacts and send reminder
+          env:
+            FIREBASE_DB_URL: https://stay-close-sc2026-default-rtdb.us-central1.firebasedatabase.app
+            USER_EMAIL: ${{ secrets.USER_EMAIL }}
+            USER_NAME: ${{ secrets.USER_NAME }}
+            EJS_SERVICE: ${{ secrets.EJS_SERVICE }}
+            EJS_TEMPLATE: ${{ secrets.EJS_TEMPLATE }}
+            EJS_KEY: ${{ secrets.EJS_KEY }}
+          run: |
+            set -e
+            CONTACTS=$(curl -sf "${FIREBASE_DB_URL}/contacts.json")
+            if [ -z "$CONTACTS" ] || [ "$CONTACTS" = "null" ]; then
+              echo "No contacts found"; exit 0
+            fi
+            NOW_MS=$(date +%s)000
+            DUE_LIST=$(echo "$CONTACTS" | python3 << 'PYEOF'
+            import json, sys
+            now = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+            contacts = json.load(sys.stdin)
+            if not isinstance(contacts, dict): sys.exit(0)
+            due = []
+            rels =
+  {'parent':'Parent','sibling':'Sibling','grandparent':'Grandparent','uncle_aunt':'Uncle/Aunt','cousin':'Cousin','in_law':'In-law','close_friend':'Close
+  Friend','casual_friend':'Casual Friend'}
+            for cid, c in contacts.items():
+                if not isinstance(c, dict): continue
+                nr = c.get('nextReminder', 0)
+                if nr and nr <= now:
+                    diff = (now - nr) // 86400000
+                    status = f'{diff} day(s) overdue' if diff > 0 else 'Due today'
+                    rel = rels.get(c.get('relationship',''), c.get('relationship',''))
+                    due.append(f"{c.get('name','?')} ({rel}) - {status}")
+            if due: print('\n'.join(due))
+            PYEOF
+            )
+            if [ -z "$DUE_LIST" ]; then
+              echo "No contacts due today"; exit 0
+            fi
+            COUNT=$(echo "$DUE_LIST" | wc -l)
+            SUBJECT="Stay Close: ${COUNT} people to reach out to"
+            MSG=$(printf "Hey %s!\n\nTime to reach out to:\n\n%s\n\nOpen Stay Close for message suggestions!" "$USER_NAME" "$DUE_LIST")
+            BODY=$(python3 -c "import json; print(json.dumps({'service_id':'$EJS_SERVICE','template_id':'$EJS_TEMPLATE','user_id':'$EJS_KEY','template_param
+  s':{'to_email':'$USER_EMAIL','to_name':'$USER_NAME','subject':'$SUBJECT','message':'''$MSG'''}}))")
+            curl -sf -X POST "https://api.emailjs.com/api/v1.0/email/send" -H "Content-Type: application/json" -d "$BODY"
+            echo "Reminder sent for ${COUNT} contacts"
