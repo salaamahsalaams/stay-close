@@ -166,6 +166,90 @@ body{
 #listWrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 .contact-list{display:flex;flex-direction:column;gap:10px;padding-top:8px}
 
+/* ── Week View ── */
+.week-view{padding-top:8px}
+.week-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.week-nav-btn{
+  border:none;background:var(--card);
+  width:36px;height:36px;border-radius:50%;
+  font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--txt);box-shadow:var(--shadow);
+  transition:all .2s;
+}
+.week-nav-btn:active{transform:scale(.92)}
+.week-nav-label{
+  font-weight:700;font-size:14px;color:var(--txt);
+  text-align:center;
+}
+.week-day{
+  background:var(--card);
+  border-radius:14px;
+  margin-bottom:10px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.week-day-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+.week-day-name{
+  font-weight:700;font-size:13px;color:var(--txt-lt);
+  text-transform:uppercase;letter-spacing:.5px;
+  min-width:40px;
+}
+.week-day-date{
+  font-weight:600;font-size:13px;color:var(--txt);
+}
+.week-day-header.is-today{
+  background:var(--primary-lt);
+}
+.week-day-header.is-today .week-day-name,
+.week-day-header.is-today .week-day-date{
+  color:var(--primary);
+}
+.week-day-items{padding:0}
+.week-day-items:empty::after{
+  content:'No calls scheduled';
+  display:block;padding:10px 14px;
+  font-size:13px;color:var(--txt-ltr);
+  font-style:italic;
+}
+.week-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:background .15s;
+}
+.week-item:not(:last-child){
+  border-bottom:1px solid var(--border);
+}
+.week-item:active{background:var(--primary-lt)}
+.week-item-emoji{
+  width:32px;height:32px;min-width:32px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-lt);border-radius:10px;
+  font-size:16px;
+}
+.week-item-info{flex:1;min-width:0}
+.week-item-name{
+  font-weight:600;font-size:14px;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.week-item-rel{font-size:12px;color:var(--txt-lt)}
+.week-item-status{
+  font-size:11px;font-weight:600;
+  padding:3px 8px;border-radius:10px;
+  white-space:nowrap;
+}
+.week-item-status.overdue{background:var(--danger-lt);color:var(--danger)}
+.week-item-status.due-today{background:#FFF3E0;color:#E65100}
+.week-item-status.upcoming{background:var(--secondary-lt);color:var(--secondary)}
+
 /* ── Contact Card ── */
 .contact-card{
   display:flex;align-items:center;gap:14px;

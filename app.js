@@ -16,6 +16,7 @@ const FAMILY_RELS = new Set(['parent', 'sibling', 'grandparent', 'uncle_aunt', '
 let state = null;
 let db = null;
 let currentFilter = 'all';
+let weekOffset = 0;
 let addFormState = {};
 let activeContactId = null;
 let activeOccasion = null;
@@ -276,9 +277,21 @@ function filterContacts() {
 }
 
 function renderContacts() {
-  const list = filterContacts();
   const container = $('contactList');
+  const weekView = $('weekView');
   const empty = $('emptyState');
+
+  if (currentFilter === 'week') {
+    container.hidden = true;
+    weekView.hidden = false;
+    empty.hidden = true;
+    renderWeekView();
+    return;
+  }
+
+  container.hidden = false;
+  weekView.hidden = true;
+  const list = filterContacts();
 
   if (list.length === 0) {
     container.innerHTML = '';
@@ -326,6 +339,109 @@ function renderContacts() {
 
   container.innerHTML = '';
   container.appendChild(frag);
+}
+
+// ── Week View ──
+
+function getWeekDays(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function getContactsForDay(date) {
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setHours(23, 59, 59, 999);
+  const dayStartMs = dayStart.getTime();
+  const dayEndMs = dayEnd.getTime();
+
+  return state.contacts.filter(c => {
+    if (!c.nextReminder) return false;
+    if (c.nextReminder <= dayEndMs && c.nextReminder >= dayStartMs) return true;
+    if (c.nextReminder < dayStartMs) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dayStartMs === today.getTime()) return true;
+    }
+    return false;
+  });
+}
+
+function renderWeekView() {
+  const days = getWeekDays(weekOffset);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+
+  const weekStart = days[0];
+  const weekEnd = days[6];
+  const monthFmt = { month: 'short', day: 'numeric' };
+  const label = `${weekStart.toLocaleDateString(undefined, monthFmt)} – ${weekEnd.toLocaleDateString(undefined, monthFmt)}`;
+
+  let html = `
+    <div class="week-nav">
+      <button class="week-nav-btn" id="weekPrev">‹</button>
+      <div class="week-nav-label">
+        ${label}
+        ${weekOffset === 0 ? '<div style="font-size:11px;color:var(--txt-lt);font-weight:400">This week</div>' : ''}
+      </div>
+      <button class="week-nav-btn" id="weekNext">›</button>
+    </div>
+  `;
+
+  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  for (let i = 0; i < 7; i++) {
+    const d = days[i];
+    const dMs = new Date(d); dMs.setHours(0, 0, 0, 0);
+    const isToday = dMs.getTime() === todayMs;
+    const contacts = getContactsForDay(d);
+
+    html += `<div class="week-day">
+      <div class="week-day-header ${isToday ? 'is-today' : ''}">
+        <span class="week-day-name">${DAY_NAMES[i]}</span>
+        <span class="week-day-date">${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+        ${contacts.length ? `<span style="margin-left:auto;font-size:12px;color:var(--txt-lt)">${contacts.length}</span>` : ''}
+      </div>
+      <div class="week-day-items">`;
+
+    for (const c of contacts) {
+      const emoji = RELATIONSHIP_EMOJI[c.relationship] || '👤';
+      const relLabel = RELATIONSHIP_LABELS[c.relationship] || c.relationship;
+      const status = getContactStatus(c);
+      const statusLabel = status === 'overdue' ? 'Overdue' : status === 'due-today' ? 'Today' : 'Upcoming';
+      html += `
+        <div class="week-item" data-id="${c.id}">
+          <div class="week-item-emoji">${emoji}</div>
+          <div class="week-item-info">
+            <div class="week-item-name">${esc(c.name)}</div>
+            <div class="week-item-rel">${relLabel}</div>
+          </div>
+          <span class="week-item-status ${status}">${statusLabel}</span>
+        </div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  $('weekView').innerHTML = html;
+
+  $('weekPrev').addEventListener('click', () => { weekOffset--; renderWeekView(); });
+  $('weekNext').addEventListener('click', () => { weekOffset++; renderWeekView(); });
+  $('weekView').querySelectorAll('.week-item').forEach(item => {
+    item.addEventListener('click', () => showDetail(item.dataset.id));
+  });
 }
 
 // ── Contact Detail ──
@@ -769,6 +885,7 @@ function bindEvents() {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentFilter = tab.dataset.filter;
+    if (currentFilter !== 'week') weekOffset = 0;
     renderContacts();
   });
 
