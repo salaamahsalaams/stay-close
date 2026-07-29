@@ -366,28 +366,6 @@ async function generateWithGemini(apiKey, prompt) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 }
 
-async function generateWithGrok(apiKey, prompt) {
-  const res = await fetch('https://api.x.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey
-    },
-    body: JSON.stringify({
-      model: 'grok-4.3',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.9,
-      max_tokens: 300
-    })
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Grok API error: ${res.status} — ${err}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '';
-}
-
 async function generateWithGroq(apiKey, prompt) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -424,13 +402,11 @@ async function generateMessage(contact, occasion, pointers) {
   const provider = localStorage.getItem('ai_provider') || 'groq';
   const prompt = buildGeminiPrompt(contact, occasion, pointers);
   const geminiKey = localStorage.getItem('gemini_api_key');
-  const grokKey = localStorage.getItem('grok_api_key');
   const groqKey = localStorage.getItem('groq_api_key');
   const errors = [];
 
   const providers = {
     gemini: [geminiKey, generateWithGemini, 'Gemini'],
-    grok: [grokKey, generateWithGrok, 'Grok'],
     groq: [groqKey, generateWithGroq, 'Groq']
   };
 
