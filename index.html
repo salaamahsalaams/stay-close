@@ -290,12 +290,20 @@
       <div class="form-group">
         <label class="form-label">AI Provider</label>
         <div class="toggle-row">
-          <button class="toggle-btn ai-provider active" data-provider="gemini">Gemini</button>
+          <button class="toggle-btn ai-provider" data-provider="groq">Groq</button>
+          <button class="toggle-btn ai-provider" data-provider="gemini">Gemini</button>
           <button class="toggle-btn ai-provider" data-provider="grok">Grok</button>
         </div>
       </div>
 
-      <div id="geminiSettings" class="form-group">
+      <div id="groqSettings" class="form-group">
+        <label class="form-label">Groq API Key <span class="label-hint">(free at <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>)</span></label>
+        <input id="setGroqKey" type="password" class="form-input" placeholder="Your Groq key (gsk_...)">
+        <p class="label-hint" style="margin-top:4px">14,400 free requests/day — no credit card needed</p>
+        <button id="testGroqBtn" class="btn-secondary btn-sm" style="margin-top:8px">Test API Key</button>
+      </div>
+
+      <div id="geminiSettings" class="form-group" hidden>
         <label class="form-label">Gemini API Key <span class="label-hint">(free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>)</span></label>
         <input id="setGeminiKey" type="password" class="form-input" placeholder="Your Gemini key">
         <button id="testGeminiBtn" class="btn-secondary btn-sm" style="margin-top:8px">Test API Key</button>

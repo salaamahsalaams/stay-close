@@ -764,15 +764,17 @@ function openSettings() {
   $('setName').value = state.userName || '';
   $('setGeminiKey').value = localStorage.getItem('gemini_api_key') || '';
   $('setGrokKey').value = localStorage.getItem('grok_api_key') || '';
+  $('setGroqKey').value = localStorage.getItem('groq_api_key') || '';
   $('setEmail').value = localStorage.getItem('user_email') || '';
   $('setEjsService').value = localStorage.getItem('ejs_service') || 'service_n7vi3cp';
   $('setEjsTemplate').value = localStorage.getItem('ejs_template') || 'template_g12p1g4';
   $('setEjsKey').value = localStorage.getItem('ejs_key') || 'SKTDXa5RC6ClKNCNA';
 
-  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  const provider = localStorage.getItem('ai_provider') || 'groq';
   $('settingsModal').querySelectorAll('.ai-provider').forEach(b => {
     b.classList.toggle('active', b.dataset.provider === provider);
   });
+  $('groqSettings').hidden = provider !== 'groq';
   $('geminiSettings').hidden = provider !== 'gemini';
   $('grokSettings').hidden = provider !== 'grok';
 
@@ -780,9 +782,10 @@ function openSettings() {
     b.classList.toggle('active', b.dataset.lang === state.defaultLanguage);
   });
 
+  const gqk = localStorage.getItem('groq_api_key');
   const gk = localStorage.getItem('grok_api_key');
   const gmk = localStorage.getItem('gemini_api_key');
-  $('debugInfo').textContent = `Cache: v14 | Provider: ${provider} | Grok key: ${gk ? 'saved (' + gk.substring(0, 6) + '...)' : 'none'} | Gemini key: ${gmk ? 'saved (' + gmk.substring(0, 6) + '...)' : 'none'}`;
+  $('debugInfo').textContent = `Cache: v16 | Provider: ${provider} | Groq: ${gqk ? gqk.substring(0, 8) + '...' : 'none'} | Gemini: ${gmk ? gmk.substring(0, 6) + '...' : 'none'} | Grok: ${gk ? gk.substring(0, 6) + '...' : 'none'}`;
 
   $('settingsModal').classList.add('open');
 }
@@ -802,6 +805,10 @@ function saveSettings() {
   const grokKey = $('setGrokKey').value.trim();
   if (grokKey) localStorage.setItem('grok_api_key', grokKey);
   else localStorage.removeItem('grok_api_key');
+
+  const groqKey = $('setGroqKey').value.trim();
+  if (groqKey) localStorage.setItem('groq_api_key', groqKey);
+  else localStorage.removeItem('groq_api_key');
 
   const email = $('setEmail').value.trim();
   if (email) localStorage.setItem('user_email', email);
@@ -911,6 +918,34 @@ async function testGrokKey() {
     }
   } catch {
     showToast('Connection failed — check your internet');
+  }
+}
+
+async function testGroqKey() {
+  const key = $('setGroqKey').value.trim();
+  if (!key) { showToast('Please enter an API key first'); return; }
+  showToast('Testing...');
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: 'Say "Connected!" in one word.' }],
+        max_tokens: 10
+      })
+    });
+    if (res.ok) showToast('Groq API key works!');
+    else {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.error?.message || `Error ${res.status}`;
+      showToast('Groq key failed: ' + msg);
+    }
+  } catch (e) {
+    showToast('Connection failed: ' + e.message);
   }
 }
 
@@ -1072,6 +1107,7 @@ function bindEvents() {
   $('testEmailBtn').addEventListener('click', sendTestEmail);
   $('testGeminiBtn').addEventListener('click', testGeminiKey);
   $('testGrokBtn').addEventListener('click', testGrokKey);
+  $('testGroqBtn').addEventListener('click', testGroqKey);
 
   $('settingsModal').addEventListener('click', e => {
     const langBtn = e.target.closest('.set-lang');
@@ -1083,6 +1119,7 @@ function bindEvents() {
     if (provBtn) {
       $('settingsModal').querySelectorAll('.ai-provider').forEach(b => b.classList.remove('active'));
       provBtn.classList.add('active');
+      $('groqSettings').hidden = provBtn.dataset.provider !== 'groq';
       $('geminiSettings').hidden = provBtn.dataset.provider !== 'gemini';
       $('grokSettings').hidden = provBtn.dataset.provider !== 'grok';
     }

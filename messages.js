@@ -388,6 +388,28 @@ async function generateWithGrok(apiKey, prompt) {
   return data.choices?.[0]?.message?.content?.trim() || '';
 }
 
+async function generateWithGroq(apiKey, prompt) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiKey
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.9,
+      max_tokens: 300
+    })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Groq API error: ${res.status} — ${err}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || '';
+}
+
 function getTemplateMessage(contact, occasion) {
   const lang = contact.language || 'en';
   const formality = contact.profile?.formality || 'semi_formal';
@@ -399,20 +421,25 @@ function getTemplateMessage(contact, occasion) {
 }
 
 async function generateMessage(contact, occasion, pointers) {
-  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  const provider = localStorage.getItem('ai_provider') || 'groq';
   const prompt = buildGeminiPrompt(contact, occasion, pointers);
   const geminiKey = localStorage.getItem('gemini_api_key');
   const grokKey = localStorage.getItem('grok_api_key');
+  const groqKey = localStorage.getItem('groq_api_key');
   const errors = [];
 
-  const primary = provider === 'grok'
-    ? [grokKey, generateWithGrok, 'Grok']
-    : [geminiKey, generateWithGemini, 'Gemini'];
-  const fallback = provider === 'grok'
-    ? [geminiKey, generateWithGemini, 'Gemini']
-    : [grokKey, generateWithGrok, 'Grok'];
+  const providers = {
+    gemini: [geminiKey, generateWithGemini, 'Gemini'],
+    grok: [grokKey, generateWithGrok, 'Grok'],
+    groq: [groqKey, generateWithGroq, 'Groq']
+  };
 
-  for (const [key, fn, name] of [primary, fallback]) {
+  const order = [providers[provider]];
+  for (const [k, v] of Object.entries(providers)) {
+    if (k !== provider) order.push(v);
+  }
+
+  for (const [key, fn, name] of order) {
     if (!key) { errors.push(`${name}: no API key`); continue; }
     try {
       const text = await fn(key, prompt);
