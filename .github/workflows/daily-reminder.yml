@@ -22,10 +22,11 @@ name: Daily Stay Close Reminder
               echo "No contacts found"; exit 0
             fi
             NOW_MS=$(date +%s)000
-            DUE_LIST=$(python3 -c "
+            export NOW_MS
+            DUE_LIST=$(echo "$CONTACTS" | python3 -c "
             import json, sys, os
             now = int(os.environ['NOW_MS'])
-            contacts = json.loads('''$CONTACTS''')
+            contacts = json.load(sys.stdin)
             if not isinstance(contacts, dict): sys.exit(0)
             due = []
             rels =
@@ -38,7 +39,7 @@ name: Daily Stay Close Reminder
                     diff = (now - nr) // 86400000
                     status = f'{diff} day(s) overdue' if diff > 0 else 'Due today'
                     rel = rels.get(c.get('relationship',''), c.get('relationship',''))
-                    due.append(f\"{c.get('name','?')} ({rel}) - {status}\")
+                    due.append(c.get('name','?') + ' (' + rel + ') - ' + status)
             if due: print(chr(10).join(due))
             ")
             if [ -z "$DUE_LIST" ]; then
@@ -47,7 +48,20 @@ name: Daily Stay Close Reminder
             COUNT=$(echo "$DUE_LIST" | wc -l)
             SUBJECT="Stay Close: ${COUNT} people to reach out to"
             MSG=$(printf "Hey %s!\n\nTime to reach out to:\n\n%s\n\nOpen Stay Close for message suggestions!" "$USER_NAME" "$DUE_LIST")
-            BODY=$(python3 -c "import json; print(json.dumps({'service_id':'$EJS_SERVICE','template_id':'$EJS_TEMPLATE','user_id':'$EJS_KEY','template_param
-  s':{'to_email':'$USER_EMAIL','to_name':'$USER_NAME','subject':'$SUBJECT','message':'''$MSG'''}}))")
+            export SUBJECT MSG
+            BODY=$(python3 -c "
+            import json, os
+            print(json.dumps({
+              'service_id': os.environ['EJS_SERVICE'],
+              'template_id': os.environ['EJS_TEMPLATE'],
+              'user_id': os.environ['EJS_KEY'],
+              'template_params': {
+                'to_email': os.environ['USER_EMAIL'],
+                'to_name': os.environ['USER_NAME'],
+                'subject': os.environ['SUBJECT'],
+                'message': os.environ['MSG']
+              }
+            }))
+            ")
             curl -sf -X POST "https://api.emailjs.com/api/v1.0/email/send" -H "Content-Type: application/json" -d "$BODY"
             echo "Reminder sent for ${COUNT} contacts"
