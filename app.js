@@ -78,8 +78,18 @@ function initSync() {
   }
   firebase.initializeApp(cfg);
   db = firebase.database();
-  db.goOnline();
 
+  firebase.auth().signInAnonymously().then(() => {
+    db.goOnline();
+    listenToFirebase();
+  }).catch(e => {
+    console.warn('Auth failed:', e);
+    db.goOnline();
+    listenToFirebase();
+  });
+}
+
+function listenToFirebase() {
   db.ref('contacts').on('value', snap => {
     const data = snap.val() || {};
     state.contacts = Object.values(data);
