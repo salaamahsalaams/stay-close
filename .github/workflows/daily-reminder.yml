@@ -10,6 +10,7 @@ jobs:
       - name: Check contacts and send reminder
         env:
           FIREBASE_DB_URL: https://stay-close-sc2026-default-rtdb.us-central1.firebasedatabase.app
+          FIREBASE_DB_SECRET: ${{ secrets.FIREBASE_DB_SECRET }}
           USER_EMAIL: ${{ secrets.USER_EMAIL }}
           USER_NAME: ${{ secrets.USER_NAME }}
           EJS_SERVICE: ${{ secrets.EJS_SERVICE }}
@@ -17,7 +18,7 @@ jobs:
           EJS_KEY: ${{ secrets.EJS_KEY }}
         run: |
           set -e
-          CONTACTS=$(curl -sf "${FIREBASE_DB_URL}/contacts.json")
+          CONTACTS=$(curl -sf "${FIREBASE_DB_URL}/contacts.json?auth=${FIREBASE_DB_SECRET}")
           if [ -z "$CONTACTS" ] || [ "$CONTACTS" = "null" ]; then
             echo "No contacts found"; exit 0
           fi
@@ -29,12 +30,27 @@ jobs:
           contacts = json.load(sys.stdin)
           if not isinstance(contacts, dict): sys.exit(0)
           due = []
-          rels = {'parent':'Parent','sibling':'Sibling','grandparent':'Grandparent','uncle_aunt':'Uncle/Aunt','cousin':'Cousin','in_law':'In-law','close_friend':'Close Friend','casual_friend':'Casual Friend'}
+          rels = {'parent':'Parent','sibling':'Sibling','grandparent':'Grandparent','uncle_aunt':'Uncle/Aunt','cousin'
+:'Cousin','in_law':'In-law','close_friend':'Close Friend','casual_friend':'Casual Friend'}
           for cid, c in contacts.items():
               if not isinstance(c, dict): continue
               nr = c.get('nextReminder', 0)
               if nr and nr <= now:
                   diff = (now - nr) // 86400000
+                  status = f'{diff} day(s) overdue' if diff > 0 else 'Due today'
+                  rel = rels.get(c.get('relationship',''), c.get('relationship',''))
+                  due.append(c.get('name','?') + ' (' + rel + ') - ' + status)
+          if due: print(chr(10).join(due))
+          ")
+          if [ -z "$DUE_LIST" ]; then
+            echo "No contacts due today"; exit 0
+          fi
+          COUNT=$(echo "$DUE_LIST" | wc -l)
+          SUBJECT="Stay Close: ${COUNT} people to reach out to"
+          MSG=$(printf "Hey %s!\n\nTime to reach out to:\n\n%s\n\nOpen Stay Close for message suggestions!"
+"$USER_NAME" "$DUE_LIST")
+          export SUBJECT MSG
+          BODY=$(python3 -c "
                   status = f'{diff} day(s) overdue' if diff > 0 else 'Due today'
                   rel = rels.get(c.get('relationship',''), c.get('relationship',''))
                   due.append(c.get('name','?') + ' (' + rel + ') - ' + status)
